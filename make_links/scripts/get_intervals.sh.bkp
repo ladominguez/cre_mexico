@@ -1,0 +1,32 @@
+#!/bin/sh
+
+INPUT=/home/u2/antonio/data/CRSMEX/make_links/sequences.dat
+CAT=/home/u2/antonio/data/CRSMEX/Catalogs/CATALOG_2001_2014_ID.DAT
+touch long_list.dat
+while read line;do
+	echo $line | sed -e 's/\s\+/\n/g' > tmp
+        nl=$(wc -l tmp | awk '{print $1}')
+	echo "MEX " $nl $line
+	counter=0
+	touch tmp2
+        echo $nl | awk '{printf("%d times ",$1)}'
+	for k in $(cat tmp); do
+		grep $k $CAT >> tmp2
+                counter=$((counter+1))
+		if [[ "$counter" -gt 1 ]]; then
+                       date2=$(tail -1 tmp2 | awk '{print $1}')
+                       ddif=$(./daysdiff $date1 $date2 )
+		       echo $ddif | awk '{printf("%7.3f years ",$1./365.0)}'
+		       echo $ddif | awk '{printf("%7.3f \n ",   $1./365.0)}' >> long_list.dat
+		       
+                       date1=$date2
+                else
+                       date1=$(tail -1 tmp2 | awk '{print $1}')
+                fi
+               	unset date2
+	done
+	echo ' '  
+	cat tmp2
+	rm tmp2 tmp
+	echo ' '
+done < $INPUT

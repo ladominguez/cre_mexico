@@ -1,0 +1,4 @@
+d1=`date +%s -d $1`
+d2=`date +%s -d $2`
+((diff_sec=d2-d1))
+echo - | awk -v SECS=$diff_sec '{printf "%d\n",SECS/(60*60*24)}'
