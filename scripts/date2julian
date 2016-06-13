@@ -1,0 +1,63 @@
+#!/bin/sh
+#  This script converts original.filename to julian date 
+#               antonio@seismo.berkeley.edu   - Sep 2014
+#
+INPUT=original.filename
+
+
+for k in `cat $INPUT`; do
+	year=`echo $k | cut -c1-4`
+	year=`echo $k | cut -c1-4`
+	month=`echo $k | cut -c6-7`
+	day=`echo $k | cut -c9-10`
+    if [ "$(($year % 4 ))" -eq 0 ]
+    then
+        leap=1
+    else
+        leap=0
+    fi
+
+	case $month in
+		01)
+			jday=$((0))
+			;;
+		02)
+			jday=$((31))
+			;;
+		03)
+			jday=$((59+$leap))
+			;;
+		04)
+			jday=$((90+$leap))
+			;;
+		05)
+			jday=$((120+$leap))
+			;;
+		06)
+			jday=$((151+$leap))
+			;;
+		07)
+			jday=$((181+$leap))
+			;;
+		08)
+			jday=$((212+$leap))
+			;;
+		09)
+			jday=$((243+$leap))
+			;;
+		10)
+			jday=$((273+$leap))
+			;;
+		11)
+			jday=$((304+$leap))
+			;;
+		12)
+			jday=$((334+$leap))
+			;;
+		*)
+	esac
+	jday=$(($jday+10#$day))
+	echo $jday | awk '{printf("%.3d\n",$1)}'
+	
+done
+

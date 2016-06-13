@@ -1,0 +1,119 @@
+#!/bin/sh
+# This code computes an equivalence table file filename_id.dat for later
+# conversion of the filenames of the stations for compatibility with
+# Taka'Aki's code. Original filenames staterte with a sequence of numbers
+# which corresponds to the origin time of the eq. This must be changed for
+# a filename with the eq. id in the following format.
+# Luis filename format
+#      yyyymmddhhmmss.net.station.channel.sac
+#      20140527220136.IG.ARIG.BHZ.sac (example)
+# Taira filename format
+#      station.net.channel..D.year.jd.hhmmss.event_id.sac
+#
+#               antonio@seismo.berkeley.edu   - Sep 2014
+#
+CATALOG=/data/seis01/antonio/CRSMEX/Catalogs/EQ_ID_TABLE.DAT
+OUTPUT=rename_files.sh
+ERROR=error_log.txt
+
+if [ -f $OUTPUT ]
+then
+	rm $OUTPUT
+else
+	touch $OUTPUT
+fi
+
+if [ -f $ERROR ]
+then
+	rm $ERROR
+else
+	touch $ERROR
+fi
+
+for k in `ls *.sac`; do 
+	time_id=`echo $k | awk -F. '{print $1}'`
+        time=`echo $k | cut -c 9-14`
+	year=`echo $time_id | cut -c1-4`
+	month=`echo $time_id | cut -c5-6`
+	day=`echo $time_id | cut -c7-8`
+	net=`echo $k | awk -F. '{print $2}'`
+	sta=`echo $k | awk -F. '{print $3}'`
+	channel=`echo $k | awk -F. '{print $4}'`
+	n_lines=`grep $time_id $CATALOG | wc -l` 
+        eq_id=`grep $time_id $CATALOG | awk '{print $2}'`
+	
+	if [ "$n_lines" -gt 1 ]
+	then 
+		echo "Duplicated files." >> $ERROR
+		grep $time_id $CATALOG >> $ERROR
+		echo "Duplicated files." 
+		grep $time_id $CATALOG
+		eq_id=`grep $time_id $CATALOG | awk '{print $2}' | tail -1`  # Chooses the last line, if duplicates exists 
+	fi
+	if [ "$n_lines" -eq 0 ]
+	then
+		echo "No ID found for file " $k >> $ERROR
+		echo "No ID found for file " $k 
+	fi
+	       
+ 
+	if [ "$(($year % 4 ))" -eq 0 ]
+	then
+		leap=1
+	else
+		leap=0
+	fi
+
+	case $month in
+		01)
+			jday=$((0))
+			;;
+		02)
+			jday=$((31))
+			;;
+		03)
+			jday=$((59+$leap))
+			;;
+		04)
+			jday=$((90+$leap))
+			;;
+		05)
+			jday=$((120+$leap))
+			;;
+		06)
+			jday=$((151+$leap))
+			;;
+		07)
+			jday=$((181+$leap))
+			;;
+		08)
+			jday=$((212+$leap))
+			;;
+		09)
+			jday=$((243+$leap))
+			;;
+		10)
+			jday=$((273+$leap))
+			;;
+		11)
+			jday=$((304+$leap))
+			;;
+		12)
+			jday=$((334+$leap))
+			;;
+		*)
+	esac
+	jday=$(($jday+10#$day))
+	jday=`echo $jday | awk '{printf("%.3d",$1)}'`
+	new_name=$sta.$net.$channel..D.$year.$jday.$time.$eq_id.sac
+	echo mv $k $new_name >> $OUTPUT
+	
+done
+
+if [ -s $ERROR ]
+then
+	echo "Errors founds see file " $ERROR
+else
+	echo "Exiting without errors."
+	rm $ERROR
+fi
